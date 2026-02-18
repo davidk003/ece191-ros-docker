@@ -1,0 +1,112 @@
+# -----------------------------------------------------------------------------
+# Docker build context exclusions for typical ROS2 repositories
+# -----------------------------------------------------------------------------
+
+# Version control
+.git
+.gitmodules
+.gitattributes
+.github/
+.gitlab/
+
+# Local docs/planning artifacts (often large or irrelevant to image build)
+*.md
+docs/
+
+# ROS2/colcon/catkin generated artifacts
+build/
+install/
+log/
+devel/
+**/build/
+**/install/
+**/log/
+**/devel/
+**/.colcon/
+**/.ros/
+
+# CMake/Ninja generated files
+cmake-build-*/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/CTestTestfile.cmake
+**/build.ninja
+**/.ninja_deps
+**/.ninja_log
+**/compile_commands.json
+
+# Python cache, venv, and tooling outputs
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+ENV/
+.eggs/
+*.egg-info/
+
+# Editor/OS clutter
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs, temp files, and local runtime outputs
+*.log
+*.out
+*.err
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Test and coverage artifacts
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+
+# ROS bag/database captures and large runtime data dumps
+*.bag
+*.bag.active
+*.db3
+*.db3-shm
+*.db3-wal
+*.mcap
+*.sqlite
+*.sqlite3
+
+# Frontend/dependency caches (if present in monorepos)
+node_modules/
+
+# Archives and packaged artifacts
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.bz2
+*.xz
+
+# Optional large ML assets (uncomment if not required at build time)
+# *.onnx
+# *.engine
+# *.pt
+# *.pth
+# *.tflite
