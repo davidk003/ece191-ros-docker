@@ -1,0 +1,95 @@
+# arm-docker-build-test.yml
+#
+# Builds and smoke-tests both ARM64 Docker images on a native ARM64 runner.
+# No hardware mocking is required: the smoke tests only verify that the images
+# build successfully and that the ROS 2 environment inside each container is
+# correctly set up (packages installed, workspace sourced). Actual camera or
+# LiDAR hardware is NOT needed.
+#
+# Trigger manually with "Run workflow", or automatically on every push / PR
+# that touches the Dockerfiles or the workflow itself.
+
+name: ARM64 Docker Build and Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'Dockerfile.lidar'
+      - 'docker-compose*.yml'
+      - '.github/workflows/arm-docker-build-test.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'Dockerfile.lidar'
+      - 'docker-compose*.yml'
+      - '.github/workflows/arm-docker-build-test.yml'
+  workflow_dispatch:
+
+# Restrict the GITHUB_TOKEN to the minimum set of permissions needed.
+# These jobs only check out code (read) and build/run Docker images locally;
+# they never write back to the repository.
+permissions:
+  contents: read
+
+jobs:
+  # ── Camera image ─────────────────────────────────────────────────────────────
+  build-camera:
+    name: Build & smoke-test camera image (ARM64)
+    runs-on: ubuntu-22.04-arm   # native ARM64 runner — no QEMU emulation needed
+    timeout-minutes: 60         # camera build + rosdep install should finish well within 1 hour
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build camera image
+        run: |
+          docker build \
+            --progress=plain \
+            --build-arg ROS_BASE_IMAGE=arm64v8/ros:foxy-ros-base-focal \
+            -t ece191/camera:foxy \
+            -f Dockerfile \
+            .
+
+      # Verify: container starts, ROS 2 workspace is sourced, and the package
+      # built by colcon is listed by ros2 pkg.  No physical camera required.
+      - name: Smoke-test camera container
+        run: |
+          docker run --rm ece191/camera:foxy bash -c \
+            "source /opt/ros/foxy/setup.bash && \
+             source /ws/install/setup.bash && \
+             ros2 pkg list | grep -q ros2_depthai_package && \
+             echo 'camera smoke test PASSED'"
+
+  # ── LiDAR image ──────────────────────────────────────────────────────────────
+  build-lidar:
+    name: Build & smoke-test lidar image (ARM64)
+    runs-on: ubuntu-22.04-arm   # native ARM64 runner — no QEMU emulation needed
+    timeout-minutes: 120        # compiles Livox-SDK2 + livox_ros_driver2 from source (~30-45 min)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build lidar image
+        run: |
+          docker build \
+            --progress=plain \
+            --build-arg ROS_BASE_IMAGE=arm64v8/ros:humble-desktop \
+            -t ece191/lidar:humble \
+            -f Dockerfile.lidar \
+            .
+
+      # Verify: container starts, ROS 2 is sourced, and the Livox driver
+      # package installed during the build is discoverable.  No physical
+      # LiDAR sensor required.
+      - name: Smoke-test lidar container
+        run: |
+          docker run --rm ece191/lidar:humble bash -c \
+            "source /opt/ros/humble/setup.bash && \
+             source /home/devuser/livox_ws/install/setup.bash && \
+             ros2 pkg list | grep -q livox_ros_driver2 && \
+             echo 'lidar smoke test PASSED'"
