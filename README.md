@@ -9,6 +9,8 @@ ROS 2 Docker environments for ECE 191 — includes a **camera node** (DepthAI/OA
 ├── Dockerfile                        # Camera container (ROS 2 Foxy, ARM64/Jetson)
 ├── Dockerfile.lidar                  # LiDAR container  (ROS 2 Humble, x86-64/ARM)
 ├── docker-compose.yml                # Compose file to build/run both containers
+├── docker-compose.arm64.yml          # ARM64 override for Jetson AGX Xavier builds
+├── verify_nodes.sh                   # Script to verify both nodes are broadcasting
 ├── ece191-ros2-depthai-camera/       # ROS 2 workspace — DepthAI/OAK camera node
 │   └── ros2_depthai_package/
 └── ece191-ros2-livox-lidar/          # Launch scripts — Livox LiDAR node
@@ -31,7 +33,7 @@ See [`ece191-ros2-depthai-camera/README.md`](ece191-ros2-depthai-camera/README.m
 
 | Property | Value |
 |---|---|
-| Base image | `osrf/ros:humble-desktop` |
+| Base image | `osrf/ros:humble-desktop` (override with `ROS_BASE_IMAGE`; use `arm64v8/ros:humble-desktop` for Jetson) |
 | ROS distro | Humble |
 | Drivers | [Livox-SDK2](https://github.com/Livox-SDK/Livox-SDK2) + [livox_ros_driver2](https://github.com/Livox-SDK/livox_ros_driver2) |
 | Tested sensor | Livox MID360 (adaptable to HAP and others) |
@@ -44,6 +46,16 @@ See [`ece191-ros2-livox-lidar/README.md`](ece191-ros2-livox-lidar/README.md) for
 
 ```bash
 docker compose build
+```
+
+### Build for ARM64 / Jetson AGX Xavier
+
+Use the provided ARM64 override file so that native ARM64 base images are used
+for both containers (no QEMU emulation required when building on a Jetson):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml build
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml up
 ```
 
 ### Run the camera container
@@ -110,6 +122,34 @@ ros2 topic list
 ros2 topic hz /oak/rgb/image_raw   # camera
 ros2 topic hz /livox/lidar         # lidar
 ```
+
+### Automated node verification
+
+`verify_nodes.sh` checks that both the camera and LiDAR topics are actively
+broadcasting. Run it on the host after starting the containers:
+
+```bash
+# One-time: set the host environment to match the containers
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+source /opt/ros/$ROS_DISTRO/setup.bash
+
+# Run the verification script
+./verify_nodes.sh
+```
+
+The script prints `PASS` / `FAIL` for each topic and exits with code `1` if any
+node is not broadcasting. You can customise topic names, the timeout, and the
+minimum expected rate via environment variables:
+
+| Variable | Default | Description |
+|---|---|---|
+| `CAMERA_TOPIC` | `/oak/rgb/image_raw` | Camera topic to verify |
+| `LIDAR_TOPIC` | `/livox/lidar` | LiDAR topic to verify |
+| `VERIFY_TIMEOUT` | `10` | Seconds to wait for each topic |
+| `VERIFY_MIN_HZ` | `1.0` | Minimum acceptable publish rate (Hz) |
+| `ROS_DISTRO` | `humble` | ROS 2 distribution to source if `ros2` is not on `PATH` |
+
 
 > **Tip:** To avoid setting these exports in every terminal, add them to your `~/.bashrc`:
 > ```bash

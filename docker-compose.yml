@@ -20,6 +20,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.lidar
+      args:
+        ROS_BASE_IMAGE: osrf/ros:humble-desktop
     image: ece191/lidar:humble
     network_mode: host
     privileged: true
