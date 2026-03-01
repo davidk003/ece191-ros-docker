@@ -285,7 +285,7 @@ class CameraPublisher(Node):
         self.camera_connected = False
         self.get_logger().warning("Camera connection lost. Will attempt to reconnect...")
 
-    def destroy_node(self) -> bool:
+    def destroy_node(self) -> None:
         if hasattr(self, "device") and self.device is not None:
             try:
                 self.device.close()

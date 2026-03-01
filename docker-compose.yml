@@ -1,0 +1,31 @@
+services:
+  camera:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ROS_BASE_IMAGE: arm64v8/ros:foxy-ros-base-focal
+    image: ece191/camera:foxy
+    network_mode: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+  lidar:
+    build:
+      context: .
+      dockerfile: Dockerfile.lidar
+    image: ece191/lidar:humble
+    network_mode: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
