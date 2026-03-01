@@ -72,3 +72,48 @@ docker compose run --rm -v .:/log lidar \
 - For the camera: a Luxonis DepthAI/OAK USB camera connected to the host.
 - For the LiDAR: a Livox sensor connected over Ethernet; host static IP `192.168.1.5`; sensor IP defaults to `192.168.1.1<last-two-digits-of-serial>` (e.g. serial ending `50` → sensor IP `192.168.1.150`).
 - For RViz display forwarding: run `xhost +local:root` on the host first.
+
+## Receiving ROS 2 Messages on the Host
+
+Both containers use `--network=host` so they share the host's network stack. For the host to discover and subscribe to topics published inside a container, **three things must match** between the container and the host terminal:
+
+| Setting | Container value | How to set on the host |
+|---|---|---|
+| Network | `host` (already set) | — |
+| `ROS_DOMAIN_ID` | `0` | `export ROS_DOMAIN_ID=0` |
+| `RMW_IMPLEMENTATION` | `rmw_cyclonedds_cpp` | `export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` |
+
+### One-time host setup
+
+Install CycloneDDS for your ROS 2 distro (replace `$ROS_DISTRO` with `foxy`, `humble`, etc.):
+
+```bash
+sudo apt install ros-$ROS_DISTRO-rmw-cyclonedds-cpp
+```
+
+### Per-terminal host setup
+
+In every terminal where you want to see container topics, run:
+
+```bash
+source /opt/ros/$ROS_DISTRO/setup.bash
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+```
+
+### Verify connectivity
+
+While a container is running, check that the host can see its topics:
+
+```bash
+ros2 topic list
+ros2 topic hz /oak/rgb/image_raw   # camera
+ros2 topic hz /livox/lidar         # lidar
+```
+
+> **Tip:** To avoid setting these exports in every terminal, add them to your `~/.bashrc`:
+> ```bash
+> echo "export ROS_DOMAIN_ID=0" >> ~/.bashrc
+> echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
+> ```
+

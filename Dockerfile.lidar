@@ -43,6 +43,10 @@ RUN git clone https://github.com/Livox-SDK/livox_ros_driver2.git \
     && bash -c "source /opt/ros/humble/setup.bash && ./build.sh humble"
 RUN echo "export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:/usr/local/lib" >> /home/devuser/.bashrc
 
+# Use CycloneDDS as the RMW for host-container topic visibility (package already installed above)
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV ROS_DOMAIN_ID=0
+
 # Copy convenience launch scripts
 COPY ece191-ros2-livox-lidar/launch/run.sh \
      ece191-ros2-livox-lidar/launch/record_MID360_launch.py \

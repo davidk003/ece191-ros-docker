@@ -8,11 +8,16 @@ FROM ${ROS_BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1) Base build tools
+# 1) Base build tools + CycloneDDS RMW (matches lidar container so host can receive from both)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions \
     build-essential \
+    ros-foxy-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*
+
+# Use CycloneDDS as the RMW for host-container topic visibility
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV ROS_DOMAIN_ID=0
 
 # 2) Create workspace
 WORKDIR /ws

@@ -51,6 +51,7 @@ Replace `<sensor-id>` with the last two digits of the sensor serial number:
 ```bash
 docker run --rm -it --privileged --network=host \
   -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e ROS_DOMAIN_ID=0 -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
   --name livox_container ece191/lidar:humble \
   /bin/bash -c "/home/devuser/livox_ws/src/run.sh <sensor-id> ros2 launch livox_ros_driver2 rviz_MID360_launch.py"
 ```
@@ -60,6 +61,7 @@ docker run --rm -it --privileged --network=host \
 ```bash
 docker run --rm -it --privileged --network=host \
   -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v .:/log \
+  -e ROS_DOMAIN_ID=0 -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
   --name livox_container ece191/lidar:humble \
   /bin/bash -c "cd /log && /home/devuser/livox_ws/src/run.sh <sensor-id> ros2 launch /home/devuser/livox_ws/src/record_MID360_launch.py"
 ```
@@ -69,6 +71,7 @@ docker run --rm -it --privileged --network=host \
 ```bash
 docker run --rm -it --privileged --network=host \
   -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e ROS_DOMAIN_ID=0 -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
   --name livox_container ece191/lidar:humble
 ```
 
@@ -82,3 +85,4 @@ docker run --rm -it --privileged --network=host \
 
 - The container uses `--network=host` and `--privileged` to allow direct access to the Livox sensor over Ethernet.
 - Development and testing target Ubuntu with X11 display forwarding.
+- To receive topics on the host, match `ROS_DOMAIN_ID=0` and `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` — see the [root README](../README.md#receiving-ros-2-messages-on-the-host) for details.
