@@ -14,4 +14,4 @@ source /home/devuser/livox_ws/install/setup.bash
 source /home/devuser/ros2_ws/install/setup.bash 2> /dev/null || true
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 # Run the provided command
-$@
+"$@"

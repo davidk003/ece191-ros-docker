@@ -34,7 +34,7 @@ RUN echo "source /opt/ros/humble/setup.bash" >> /home/devuser/.bashrc \
 # Install Livox SDK2
 RUN git clone https://github.com/Livox-SDK/Livox-SDK2.git \
     && cd Livox-SDK2 && mkdir build && cd build \
-    && cmake .. && make -j && sudo make install \
+    && cmake .. && make -j$(nproc) && sudo make install \
     && cd ../../ && rm -r Livox-SDK2
 
 # Install Livox ROS2 driver
