@@ -1,6 +1,10 @@
 # Dockerfile for Livox LiDAR ROS2 node
 # Based on: https://github.com/tedsamu/livox-ros2-docker
-FROM osrf/ros:humble-desktop
+# Default to the standard x86-64 desktop image.
+# For ARM64/Jetson AGX Xavier, override with:
+#   docker build --build-arg ROS_BASE_IMAGE=arm64v8/ros:humble-desktop -f Dockerfile.lidar .
+ARG ROS_BASE_IMAGE=osrf/ros:humble-desktop
+FROM ${ROS_BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
 
