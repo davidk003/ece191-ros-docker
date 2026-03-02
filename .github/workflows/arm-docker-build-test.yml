@@ -78,7 +78,7 @@ jobs:
         run: |
           docker build \
             --progress=plain \
-            --build-arg ROS_BASE_IMAGE=arm64v8/ros:humble-desktop \
+            --build-arg ROS_BASE_IMAGE=ros:humble-desktop \
             -t ece191/lidar:humble \
             -f Dockerfile.lidar \
             .
