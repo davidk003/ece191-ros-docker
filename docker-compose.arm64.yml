@@ -17,4 +17,4 @@ services:
   lidar:
     build:
       args:
-        ROS_BASE_IMAGE: arm64v8/ros:humble-desktop
+        ROS_BASE_IMAGE: arm64v8/ros:humble-perception-jammy
