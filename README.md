@@ -58,18 +58,54 @@ docker compose -f docker-compose.yml -f docker-compose.arm64.yml build
 docker compose -f docker-compose.yml -f docker-compose.arm64.yml up
 ```
 
-### Run the camera container
+### Run the camera node
+
+Start the camera node directly:
+
+```bash
+docker compose run --rm camera \
+  bash -c "source /opt/ros/foxy/setup.bash && source /ws/install/setup.bash && ros2 run ros2_depthai_package camera_publisher"
+```
+
+Or open an interactive shell first and then launch the node manually:
 
 ```bash
 docker compose run --rm camera bash
+# Inside the container:
+source /opt/ros/foxy/setup.bash
+source /ws/install/setup.bash
+ros2 run ros2_depthai_package camera_publisher
 ```
 
-### Run the LiDAR container (MID360, last two digits of serial = `<id>`)
+You can pass parameter overrides when launching the node:
+
+```bash
+ros2 run ros2_depthai_package camera_publisher --ros-args -p fps:=15.0 -p width:=1280 -p height:=720
+```
+
+### Run the LiDAR node (MID360, last two digits of serial = `<id>`)
+
+Start the LiDAR node with RViz visualization:
 
 ```bash
 docker compose run --rm lidar \
   /bin/bash -c "/home/devuser/livox_ws/src/run.sh <id> ros2 launch livox_ros_driver2 rviz_MID360_launch.py"
 ```
+
+Or open an interactive shell first and then launch the node manually:
+
+```bash
+docker compose run --rm lidar bash
+# Inside the container:
+source /opt/ros/humble/setup.bash
+source /home/devuser/livox_ws/install/setup.bash
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+ros2 launch livox_ros_driver2 rviz_MID360_launch.py
+```
+
+> **Note:** When using the interactive shell, you must manually set the sensor IP
+> in `/home/devuser/livox_ws/src/livox_ros_driver2/config/MID360_config.json`
+> (the `run.sh` helper does this automatically when you pass a sensor ID).
 
 ### Record LiDAR data
 
