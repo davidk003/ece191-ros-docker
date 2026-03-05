@@ -24,7 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 2) Install DepthAI SDK (not available via rosdep / apt)
 #    Upgrade pip first so it can resolve newer manylinux aarch64 wheels,
 #    avoiding a broken source build (missing utilities/cam_test.py).
-RUN pip3 install --upgrade pip setuptools wheel && \
+#    Pin setuptools < 71 because 71+ uses importlib_metadata.EntryPoints
+#    which is unavailable on Python 3.8 (Foxy).
+RUN pip3 install --upgrade pip "setuptools<71" wheel && \
     pip3 install --prefer-binary "depthai<3"
 
 # Use CycloneDDS as the RMW for host-container topic visibility
