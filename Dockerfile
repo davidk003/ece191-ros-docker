@@ -22,7 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 2) Install DepthAI SDK (not available via rosdep / apt)
-RUN pip3 install "depthai<3"
+#    Upgrade pip first so it can resolve newer manylinux aarch64 wheels,
+#    avoiding a broken source build (missing utilities/cam_test.py).
+RUN pip3 install --upgrade pip setuptools wheel && \
+    pip3 install --prefer-binary "depthai<3"
 
 # Use CycloneDDS as the RMW for host-container topic visibility
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
