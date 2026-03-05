@@ -8,11 +8,16 @@ FROM ${ROS_BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1) Base build tools + CycloneDDS RMW (matches lidar container so host can receive from both)
+# 1) Base build tools + camera-node deps + CycloneDDS RMW
+#    (mirrors the prerequisites from ece191-ros2-depthai-camera)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions \
     python3-pip \
+    python3-yaml \
     build-essential \
+    ros-foxy-rclpy \
+    ros-foxy-sensor-msgs \
+    ros-foxy-cv-bridge \
     ros-foxy-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*
 
