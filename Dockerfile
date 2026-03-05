@@ -8,33 +8,42 @@ FROM ${ROS_BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1) Base build tools + CycloneDDS RMW (matches lidar container so host can receive from both)
+# 1) Base build tools + camera-node deps + CycloneDDS RMW
+#    (mirrors the prerequisites from ece191-ros2-depthai-camera)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions \
+    python3-pip \
+    python3-yaml \
     build-essential \
+    ros-foxy-rclpy \
+    ros-foxy-sensor-msgs \
+    ros-foxy-cv-bridge \
     ros-foxy-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*
+
+# 2) Install DepthAI SDK (not available via rosdep / apt)
+RUN pip3 install depthai
 
 # Use CycloneDDS as the RMW for host-container topic visibility
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ENV ROS_DOMAIN_ID=0
 
-# 2) Create workspace
+# 3) Create workspace
 WORKDIR /ws
 RUN mkdir -p src
 
-# 3) Copy your ROS2 packages into src/
+# 4) Copy your ROS2 packages into src/
 #    (adjust path if your repo layout differs)
 COPY . /ws/src/
 
-# 4) Resolve package deps (optional but recommended)
+# 5) Resolve package deps (optional but recommended)
 RUN apt-get update && rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y && \
     rm -rf /var/lib/apt/lists/*
 
-# 5) Build
+# 6) Build
 RUN source /opt/ros/foxy/setup.bash && \
     colcon build --symlink-install
 
-# 6) Container startup: source ROS + workspace, then launch
+# 7) Container startup: source ROS + workspace, then launch
 # CMD ["bash", "-lc", "source /opt/ros/foxy/setup.bash && source /ws/install/setup.bash && ros2 launch <your_package> <your_launch>.launch.py"]
