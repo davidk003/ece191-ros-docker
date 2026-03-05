@@ -9,7 +9,14 @@ FROM ${ROS_BASE_IMAGE}
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install debian packages
+# build-essential, cmake and git are needed to compile Livox-SDK2 and
+# livox_ros_driver2 from source.  libapr1-dev satisfies the "apr"
+# dependency declared in livox_ros_driver2's package.xml.
 RUN apt-get update && apt-get install -y \
+        build-essential \
+        cmake \
+        git \
+        libapr1-dev \
         nano \
         sudo \
         ros-humble-rmw-cyclonedds-cpp \
@@ -38,7 +45,7 @@ RUN echo "source /opt/ros/humble/setup.bash" >> /home/devuser/.bashrc \
 # Install Livox SDK2
 RUN git clone https://github.com/Livox-SDK/Livox-SDK2.git \
     && cd Livox-SDK2 && mkdir build && cd build \
-    && cmake .. && make -j$(nproc) && sudo make install \
+    && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig \
     && cd ../../ && rm -r Livox-SDK2
 
 # Install Livox ROS2 driver

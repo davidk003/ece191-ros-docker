@@ -83,13 +83,15 @@ jobs:
             -f Dockerfile.lidar \
             .
 
-      # Verify: container starts, ROS 2 is sourced, and the Livox driver
-      # package installed during the build is discoverable.  No physical
-      # LiDAR sensor required.
+      # Verify: container starts, ROS 2 is sourced, the Livox driver
+      # package is discoverable, and the node binary can resolve its
+      # shared libraries (e.g. liblivox_lidar_sdk_shared.so).
+      # No physical LiDAR sensor required.
       - name: Smoke-test lidar container
         run: |
           docker run --rm ece191/lidar:humble bash -c \
             "source /opt/ros/humble/setup.bash && \
              source /home/devuser/livox_ws/install/setup.bash && \
              ros2 pkg list | grep -q livox_ros_driver2 && \
+             ros2 pkg executables livox_ros_driver2 | grep -q livox_ros_driver2_node && \
              echo 'lidar smoke test PASSED'"
