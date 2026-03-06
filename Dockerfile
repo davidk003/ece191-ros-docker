@@ -37,6 +37,10 @@ ENV ROS_DOMAIN_ID=0
 WORKDIR /ws
 RUN mkdir -p src
 
+# Keep a helper run script in the default shell directory.
+COPY run.sh /ws/run.sh
+RUN chmod +x /ws/run.sh
+
 # 4) Copy your ROS2 packages into src/
 #    (adjust path if your repo layout differs)
 COPY . /ws/src/
