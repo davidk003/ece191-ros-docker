@@ -33,7 +33,8 @@ See [`ece191-ros2-depthai-camera/README.md`](ece191-ros2-depthai-camera/README.m
 
 | Property | Value |
 |---|---|
-| Base image | `osrf/ros:humble-desktop` (override with `ROS_BASE_IMAGE`; use `arm64v8/ros:humble-desktop` for Jetson) |
+| Base image | `osrf/ros:humble-desktop` (default compose build) |
+| ARM64 override | `arm64v8/ros:humble-perception-jammy` via `docker-compose.arm64.yml`; `rviz2` is installed explicitly in `Dockerfile.lidar` |
 | ROS distro | Humble |
 | Drivers | [Livox-SDK2](https://github.com/Livox-SDK/Livox-SDK2) + [livox_ros_driver2](https://github.com/Livox-SDK/livox_ros_driver2) |
 | Tested sensor | Livox MID360 (adaptable to HAP and others) |
@@ -71,6 +72,38 @@ docker compose run --rm lidar \
   /bin/bash -c "/home/devuser/livox_ws/src/run.sh <id> ros2 launch livox_ros_driver2 rviz_MID360_launch.py"
 ```
 
+### Foxy host + Humble LiDAR (no RViz in container, PointCloud2 output)
+
+Use this when your host ROS 2 install is Foxy but the LiDAR container is Humble.
+This publishes standard `sensor_msgs/msg/PointCloud2` so Foxy tools can subscribe.
+
+```bash
+# Rebuild after pulling changes (adds pointcloud_MID360_launch.py)
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml build --no-cache lidar
+```
+
+```bash
+# Terminal A: launch LiDAR publisher in container
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml run --rm \
+  -e LIVOX_HOST_IP=192.168.1.50 \
+  lidar /bin/bash -c "/home/devuser/livox_ws/src/run.sh <id> ros2 launch /home/devuser/livox_ws/src/pointcloud_MID360_launch.py"
+```
+
+```bash
+# Terminal B (host): subscribe from Foxy
+source /opt/ros/foxy/setup.bash
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ros2 topic list -t | grep livox
+ros2 topic echo --once /livox/lidar
+```
+
+If `rmw_cyclonedds_cpp` is missing on the host:
+
+```bash
+sudo apt install ros-foxy-rmw-cyclonedds-cpp
+```
+
 ### Record LiDAR data
 
 ```bash
@@ -82,7 +115,7 @@ docker compose run --rm -v .:/log lidar \
 
 - Docker (with Compose v2) installed on the host.
 - For the camera: a Luxonis DepthAI/OAK USB camera connected to the host.
-- For the LiDAR: a Livox sensor connected over Ethernet; host static IP `192.168.1.5`; sensor IP defaults to `192.168.1.1<last-two-digits-of-serial>` (e.g. serial ending `50` → sensor IP `192.168.1.150`).
+- For the LiDAR: a Livox sensor connected over Ethernet; host static IP `192.168.1.50` (default). Set `LIVOX_HOST_IP` if your host uses a different IP. Sensor IP defaults to `192.168.1.1<last-two-digits-of-serial>` (e.g. serial ending `50` → sensor IP `192.168.1.150`).
 - For RViz display forwarding: run `xhost +local:root` on the host first.
 
 ## Receiving ROS 2 Messages on the Host
@@ -156,4 +189,3 @@ minimum expected rate via environment variables:
 > echo "export ROS_DOMAIN_ID=0" >> ~/.bashrc
 > echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 > ```
-

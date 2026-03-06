@@ -32,5 +32,6 @@ services:
       - DISPLAY=${DISPLAY}
       - ROS_DOMAIN_ID=0
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - LIVOX_HOST_IP=${LIVOX_HOST_IP:-192.168.1.50}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix

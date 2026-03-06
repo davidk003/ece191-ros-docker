@@ -18,6 +18,7 @@ This directory contains convenience launch scripts for the Livox LiDAR Docker co
 .
 └── launch/
     ├── run.sh                    # Convenience script: sources workspaces and runs a command
+    ├── pointcloud_MID360_launch.py # Launch MID360 as PointCloud2 (no RViz)
     ├── record_MID360_launch.py   # Launch + record all /livox/* topics (MID360)
     └── record_HAP_launch.py      # Launch + record all /livox/* topics (HAP)
 ```
@@ -25,7 +26,7 @@ This directory contains convenience launch scripts for the Livox LiDAR Docker co
 ## Prerequisites
 
 - Docker installed on the host machine.
-- Livox sensor connected and host network configured with a static IP of `192.168.1.5`. The sensor IP defaults to `192.168.1.1<last-two-digits-of-serial>` (e.g. serial ending `50` → sensor IP `192.168.1.150`).
+- Livox sensor connected and host network configured with a static IP of `192.168.1.50` (default). If your host uses a different IP, set `LIVOX_HOST_IP` when launching. The sensor IP defaults to `192.168.1.1<last-two-digits-of-serial>` (e.g. serial ending `50` → sensor IP `192.168.1.150`).
 - X11 display forwarding for RViz (`xhost +local:root` if needed).
 
 ## Building the Image
@@ -56,6 +57,38 @@ docker run --rm -it --privileged --network=host \
   /bin/bash -c "/home/devuser/livox_ws/src/run.sh <sensor-id> ros2 launch livox_ros_driver2 rviz_MID360_launch.py"
 ```
 
+### Foxy host + Humble LiDAR (no RViz in container, PointCloud2 output)
+
+Use this when your host ROS 2 install is Foxy but the LiDAR container is Humble.
+This publishes standard `sensor_msgs/msg/PointCloud2` so Foxy tools can subscribe.
+
+```bash
+# Rebuild after pulling changes (adds pointcloud_MID360_launch.py)
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml build --no-cache lidar
+```
+
+```bash
+# Terminal A: launch LiDAR publisher in container
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml run --rm \
+  -e LIVOX_HOST_IP=192.168.1.50 \
+  lidar /bin/bash -c "/home/devuser/livox_ws/src/run.sh <sensor-id> ros2 launch /home/devuser/livox_ws/src/pointcloud_MID360_launch.py"
+```
+
+```bash
+# Terminal B (host): subscribe from Foxy
+source /opt/ros/foxy/setup.bash
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ros2 topic list -t | grep livox
+ros2 topic echo --once /livox/lidar
+```
+
+If `rmw_cyclonedds_cpp` is missing on the host:
+
+```bash
+sudo apt install ros-foxy-rmw-cyclonedds-cpp
+```
+
 ### Record raw data (PointCloud2 + IMU)
 
 ```bash
@@ -77,7 +110,8 @@ docker run --rm -it --privileged --network=host \
 
 ## Launch Files and Scripts
 
-- `launch/run.sh`: Sources ROS 2 workspaces, then runs the given command. If the first argument is a number, it is treated as the sensor ID and used to set the correct sensor IP address in the MID360 config file.
+- `launch/run.sh`: Sources ROS 2 workspaces, then runs the given command. If the first argument is a number, it is treated as the sensor ID and used to update MID360 sensor IP plus host bind IP in the config (uses `LIVOX_HOST_IP`, auto-detect, or fallback `192.168.1.50`).
+- `launch/pointcloud_MID360_launch.py`: Launches the MID360 driver in standard PointCloud2 mode (no RViz), useful when subscribing from a Foxy host.
 - `launch/record_MID360_launch.py`: Launches the Livox driver and records all `/livox/*` topics (MID360).
 - `launch/record_HAP_launch.py`: Launches the Livox driver and records all `/livox/*` topics (HAP).
 

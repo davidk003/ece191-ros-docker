@@ -56,6 +56,7 @@ ENV ROS_DOMAIN_ID=0
 
 # Copy convenience launch scripts
 COPY ece191-ros2-livox-lidar/launch/run.sh \
+     ece191-ros2-livox-lidar/launch/pointcloud_MID360_launch.py \
      ece191-ros2-livox-lidar/launch/record_MID360_launch.py \
      ece191-ros2-livox-lidar/launch/record_HAP_launch.py \
      ./
