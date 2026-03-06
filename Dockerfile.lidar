@@ -9,11 +9,14 @@ FROM ${ROS_BASE_IMAGE}
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install debian packages
+# rviz2 is needed for the rviz_MID360 / rviz_HAP launch files and is
+# only included in the "desktop" base image, not "perception".
 RUN apt-get update && apt-get install -y \
         nano \
         sudo \
         ros-humble-rmw-cyclonedds-cpp \
         ros-humble-imu-tools \
+        ros-humble-rviz2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
