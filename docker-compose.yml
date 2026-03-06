@@ -15,6 +15,9 @@ services:
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev:/dev
+      - /sys:/sys:ro
+      - /run/udev:/run/udev:ro
 
   lidar:
     build:
