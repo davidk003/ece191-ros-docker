@@ -56,14 +56,10 @@ class CameraPublisher(Node):
         qos_profile = self._make_qos_profile(self.qos_reliability, self.qos_depth)
         self.publisher = self.create_publisher(Image, self.topic_name, qos_profile)
 
-        self.pipeline = self._build_pipeline(
-            width=self.width,
-            height=self.height,
-            fps=self.fps,
-            anti_banding_mode_name=self.anti_banding_mode,
-        )
-
-        # Try to initialize the camera device
+        # DepthAI setup can fail transiently when the camera is missing or USB
+        # access is not ready yet. Keep the node alive and retry instead of
+        # aborting the process during construction.
+        self.pipeline = None
         self.camera_connected = False
         self.device = None
         self.rgb_queue = None
@@ -224,12 +220,37 @@ class CameraPublisher(Node):
             True if initialization was successful, False otherwise.
         """
         try:
+            if self.pipeline is None:
+                self.pipeline = self._build_pipeline(
+                    width=self.width,
+                    height=self.height,
+                    fps=self.fps,
+                    anti_banding_mode_name=self.anti_banding_mode,
+                )
+
+            available_devices = []
+            if hasattr(dai.Device, "getAllAvailableDevices"):
+                available_devices = dai.Device.getAllAvailableDevices()
+            if not available_devices:
+                self.get_logger().info("No DepthAI devices detected yet")
+                self.pipeline = None
+                self.device = None
+                self.rgb_queue = None
+                self.camera_connected = False
+                return False
+
             self.device = dai.Device(self.pipeline)
             self.rgb_queue = self.device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
             self.camera_connected = True
             return True
-        except RuntimeError as e:
-            self.get_logger().debug(f"Failed to initialize camera device: {e}")
+        except Exception as e:
+            self.get_logger().warning(f"Failed to initialize camera device: {e}")
+            if self.device is not None:
+                try:
+                    self.device.close()
+                except Exception:
+                    pass
+            self.pipeline = None
             self.device = None
             self.rgb_queue = None
             self.camera_connected = False
@@ -260,7 +281,7 @@ class CameraPublisher(Node):
             msg.step = frame.shape[1] * frame.shape[2]
             msg.data = frame.tobytes()
             self.publisher.publish(msg)
-        except (RuntimeError, AttributeError) as e:
+        except Exception as e:
             # Camera disconnected during operation
             self.get_logger().error(f"Camera disconnected during operation: {e}")
             self._handle_camera_disconnect()
@@ -278,9 +299,10 @@ class CameraPublisher(Node):
         if self.device is not None:
             try:
                 self.device.close()
-            except (RuntimeError, AttributeError) as e:
+            except Exception as e:
                 self.get_logger().debug(f"Error closing device during disconnect: {e}")
             self.device = None
+        self.pipeline = None
         self.rgb_queue = None
         self.camera_connected = False
         self.get_logger().warning("Camera connection lost. Will attempt to reconnect...")
@@ -289,7 +311,7 @@ class CameraPublisher(Node):
         if hasattr(self, "device") and self.device is not None:
             try:
                 self.device.close()
-            except (RuntimeError, AttributeError) as e:
+            except Exception as e:
                 self.get_logger().warning(f"Error closing device during cleanup: {e}")
         return super().destroy_node()
 

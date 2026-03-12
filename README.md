@@ -65,6 +65,61 @@ docker compose -f docker-compose.yml -f docker-compose.arm64.yml up
 docker compose run --rm camera bash
 ```
 
+### Run the camera container manually in the background
+
+This is the direct detached flow the updated launcher uses internally:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml build camera
+docker compose -f docker-compose.yml -f docker-compose.arm64.yml run --rm -d \
+  --name last-try-camera \
+  camera /bin/bash -lc '/ws/run.sh'
+```
+
+Useful follow-up commands:
+
+```bash
+docker logs --tail 50 last-try-camera
+docker rm -f last-try-camera
+```
+
+### Foxy host + camera one-command launcher
+
+`launch_camera_foxy_host.sh` wraps the camera startup flow:
+
+- builds the `camera` image by default before each launch
+- removes any existing container with the same name
+- starts the camera publisher container in the background as `last-try-camera`
+- waits for the Foxy host to discover the camera topic
+- attempts `ros2 topic hz <topic>` on the host, but only warns if that sampler is flaky
+- keeps the terminal attached so `Ctrl-C` or closing the terminal stops and removes the container
+
+```bash
+./launch_camera_foxy_host.sh
+```
+
+It defaults to:
+
+- host ROS distro: `foxy`
+- topic: `/oak/rgb/image_raw`
+- startup wait: `30` seconds
+- host verification middleware: `rmw_cyclonedds_cpp`
+- container name: `last-try-camera`
+- build policy: `always`
+
+Useful overrides:
+
+```bash
+CAMERA_TOPIC=/oak/rgb/image_raw ./launch_camera_foxy_host.sh
+BUILD_POLICY=never ./launch_camera_foxy_host.sh
+STARTUP_TIMEOUT=45 HZ_TIMEOUT=15 ./launch_camera_foxy_host.sh
+CAMERA_CONTAINER_NAME=my-camera ./launch_camera_foxy_host.sh
+HOST_RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ./launch_camera_foxy_host.sh
+```
+
+On success the script keeps running in the foreground after verification. Press
+`Ctrl-C` or close the terminal to stop and clean up the camera container.
+
 ### Run the LiDAR container (MID360, last two digits of serial = `<id>`)
 
 ```bash
@@ -76,6 +131,40 @@ docker compose run --rm lidar \
 
 Use this when your host ROS 2 install is Foxy but the LiDAR container is Humble.
 This publishes standard `sensor_msgs/msg/PointCloud2` so Foxy tools can subscribe.
+
+#### One-command launcher
+
+`launch_lidar_foxy_host.sh` wraps the full startup/verification flow:
+
+- builds the `lidar` image if `ece191/lidar:humble` is not present yet
+- starts the Humble LiDAR publisher in the container
+- waits for the Foxy host to discover the LiDAR topic
+- runs `ros2 topic echo <topic>` long enough to capture one full Foxy-compatible message on the host
+
+```bash
+./launch_lidar_foxy_host.sh <id>
+```
+
+It defaults to:
+
+- host ROS distro: `foxy`
+- topic: `/livox/lidar`
+- host IP for the Livox config: `192.168.1.50`
+- startup wait: `30` seconds
+
+Useful overrides:
+
+```bash
+LIVOX_HOST_IP=192.168.1.60 ./launch_lidar_foxy_host.sh <id>
+LIDAR_TOPIC=/livox/lidar HOST_ROS_DISTRO=foxy ./launch_lidar_foxy_host.sh <id>
+BUILD_POLICY=always ./launch_lidar_foxy_host.sh <id>
+STARTUP_TIMEOUT=45 ./launch_lidar_foxy_host.sh <id>
+```
+
+On success the script keeps running in the foreground after verification. Press
+`Ctrl-C` or close the terminal to stop and clean up the LiDAR container.
+
+#### Manual commands
 
 ```bash
 # Rebuild after pulling changes (adds pointcloud_MID360_launch.py)
