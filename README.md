@@ -6,7 +6,7 @@ ROS 2 Docker environments for ECE 191 — includes a **camera node** (DepthAI/OA
 
 ```text
 .
-├── Dockerfile                        # Camera container (ROS 2 Foxy, ARM64/Jetson)
+├── Dockerfile                        # Camera container (ROS 2 Humble, ARM64/Jetson)
 ├── Dockerfile.lidar                  # LiDAR container  (ROS 2 Humble, x86-64/ARM)
 ├── docker-compose.yml                # Compose file to build/run both containers
 ├── docker-compose.arm64.yml          # ARM64 override for Jetson AGX Xavier builds
@@ -23,8 +23,8 @@ ROS 2 Docker environments for ECE 191 — includes a **camera node** (DepthAI/OA
 
 | Property | Value |
 |---|---|
-| Base image | `arm64v8/ros:foxy-ros-base-focal` (override with `ROS_BASE_IMAGE`) |
-| ROS distro | Foxy |
+| Base image | `arm64v8/ros:humble-ros-base-jammy` (override with `ROS_BASE_IMAGE`) |
+| ROS distro | Humble |
 | Package | `ros2_depthai_package` — publishes `sensor_msgs/msg/Image` from a DepthAI/OAK USB camera |
 
 See [`ece191-ros2-depthai-camera/README.md`](ece191-ros2-depthai-camera/README.md) for full usage.
@@ -83,24 +83,42 @@ docker logs --tail 50 last-try-camera
 docker rm -f last-try-camera
 ```
 
+<<<<<<< HEAD
 ### Foxy host + camera one-command launcher
 
 `launch_camera_foxy_host.sh` wraps the camera startup flow:
+=======
+### Humble host + camera one-command launcher
+
+`launch_camera_humble_host.sh` wraps the camera startup flow:
+>>>>>>> 5d2bb2b (updated camera container to humble)
 
 - builds the `camera` image by default before each launch
 - removes any existing container with the same name
 - starts the camera publisher container in the background as `last-try-camera`
+<<<<<<< HEAD
 - waits for the Foxy host to discover the camera topic
+=======
+- waits for the host to discover the camera topic
+>>>>>>> 5d2bb2b (updated camera container to humble)
 - attempts `ros2 topic hz <topic>` on the host, but only warns if that sampler is flaky
 - keeps the terminal attached so `Ctrl-C` or closing the terminal stops and removes the container
 
 ```bash
+<<<<<<< HEAD
 ./launch_camera_foxy_host.sh
+=======
+./launch_camera_humble_host.sh
+>>>>>>> 5d2bb2b (updated camera container to humble)
 ```
 
 It defaults to:
 
+<<<<<<< HEAD
 - host ROS distro: `foxy`
+=======
+- host ROS distro: `humble`
+>>>>>>> 5d2bb2b (updated camera container to humble)
 - topic: `/oak/rgb/image_raw`
 - startup wait: `30` seconds
 - host verification middleware: `rmw_cyclonedds_cpp`
@@ -110,11 +128,19 @@ It defaults to:
 Useful overrides:
 
 ```bash
+<<<<<<< HEAD
 CAMERA_TOPIC=/oak/rgb/image_raw ./launch_camera_foxy_host.sh
 BUILD_POLICY=never ./launch_camera_foxy_host.sh
 STARTUP_TIMEOUT=45 HZ_TIMEOUT=15 ./launch_camera_foxy_host.sh
 CAMERA_CONTAINER_NAME=my-camera ./launch_camera_foxy_host.sh
 HOST_RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ./launch_camera_foxy_host.sh
+=======
+CAMERA_TOPIC=/oak/rgb/image_raw ./launch_camera_humble_host.sh
+BUILD_POLICY=never ./launch_camera_humble_host.sh
+STARTUP_TIMEOUT=45 HZ_TIMEOUT=15 ./launch_camera_humble_host.sh
+CAMERA_CONTAINER_NAME=my-camera ./launch_camera_humble_host.sh
+HOST_RMW_IMPLEMENTATION=rmw_cyclonedds_cpp ./launch_camera_humble_host.sh
+>>>>>>> 5d2bb2b (updated camera container to humble)
 ```
 
 On success the script keeps running in the foreground after verification. Press

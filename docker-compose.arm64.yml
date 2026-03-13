@@ -12,7 +12,8 @@ services:
   camera:
     build:
       args:
-        ROS_BASE_IMAGE: arm64v8/ros:foxy-ros-base-focal
+        ROS_DISTRO: humble
+        ROS_BASE_IMAGE: arm64v8/ros:humble-ros-base-jammy
 
   lidar:
     build:

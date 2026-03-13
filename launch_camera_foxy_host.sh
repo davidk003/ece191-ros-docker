@@ -4,7 +4,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
+<<<<<<< HEAD
 HOST_ROS_DISTRO="${HOST_ROS_DISTRO:-foxy}"
+=======
+HOST_ROS_DISTRO="${HOST_ROS_DISTRO:-humble}"
+>>>>>>> 5d2bb2b (updated camera container to humble)
 CAMERA_TOPIC="${CAMERA_TOPIC:-/oak/rgb/image_raw}"
 STARTUP_TIMEOUT="${STARTUP_TIMEOUT:-30}"
 HZ_TIMEOUT="${HZ_TIMEOUT:-10}"
@@ -12,7 +16,11 @@ BUILD_POLICY="${BUILD_POLICY:-always}"
 USE_ARM64_OVERRIDE="${USE_ARM64_OVERRIDE:-auto}"
 CAMERA_CONTAINER_NAME="${CAMERA_CONTAINER_NAME:-last-try-camera}"
 HOST_RMW_IMPLEMENTATION="${HOST_RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}"
+<<<<<<< HEAD
 IMAGE_NAME="ece191/camera:foxy"
+=======
+IMAGE_NAME="ece191/camera:humble"
+>>>>>>> 5d2bb2b (updated camera container to humble)
 
 usage() {
     cat <<'EOF'
@@ -23,7 +31,11 @@ Arguments:
   [topic]          Host topic to verify after startup. Default: /oak/rgb/image_raw
 
 Environment overrides:
+<<<<<<< HEAD
   HOST_ROS_DISTRO     Host ROS distro to source before running ros2 commands (default: foxy)
+=======
+  HOST_ROS_DISTRO     Host ROS distro to source before running ros2 commands (default: humble)
+>>>>>>> 5d2bb2b (updated camera container to humble)
   CAMERA_TOPIC        Topic to verify from the host (default: /oak/rgb/image_raw)
   STARTUP_TIMEOUT     Seconds to wait for the topic to appear on the host (default: 30)
   HZ_TIMEOUT          Seconds to sample ros2 topic hz on the host (default: 10)
@@ -168,7 +180,11 @@ compose_cmd run --rm -d --name "${container_name}" \
     camera /bin/bash -lc "/ws/run.sh" >/dev/null
 container_started=1
 
+<<<<<<< HEAD
 echo "Waiting up to ${STARTUP_TIMEOUT}s for ${CAMERA_TOPIC} to appear on the Foxy host..."
+=======
+echo "Waiting up to ${STARTUP_TIMEOUT}s for ${CAMERA_TOPIC} to appear on the host..."
+>>>>>>> 5d2bb2b (updated camera container to humble)
 deadline=$((SECONDS + STARTUP_TIMEOUT))
 while true; do
     if ros2 topic list 2>/dev/null | grep -qx "${CAMERA_TOPIC}"; then

@@ -29,7 +29,6 @@ setup(
     maintainer_email='htluu@ucsd.edu',
     description='ROS 2 node that publishes RGB frames from a Luxonis DepthAI/OAK camera.',
     license='Apache-2.0',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'camera_publisher = ros2_depthai_package.camera_publisher:main'

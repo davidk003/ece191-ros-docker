@@ -4,13 +4,20 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+<<<<<<< HEAD
         ROS_BASE_IMAGE: arm64v8/ros:foxy-ros-base-focal
     image: ece191/camera:foxy
+=======
+        ROS_DISTRO: humble
+        ROS_BASE_IMAGE: arm64v8/ros:humble-ros-base-jammy
+    image: ece191/camera:humble
+>>>>>>> 5d2bb2b (updated camera container to humble)
     command: ["/bin/bash", "-lc", "/ws/run.sh"]
     network_mode: host
     privileged: true
     environment:
       - DISPLAY=${DISPLAY}
+      - ROS_DISTRO=humble
       - ROS_DOMAIN_ID=0
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
